@@ -105,9 +105,10 @@ class Seq2SeqModel(nn.Module):
                 output = inp + self.fc1(self.dropout(next_state))
             else:
                 output = self.fc1(self.dropout(next_state))
+            # Store the output for Teacher Forcing: use the prediction as
+            # the next input instead of feeding the ground truth
+            prev_output = output
             outputs.append(output.view([1, batchsize, self.input_size]))
-
-#    return outputs, state
 
         outputs = torch.cat(outputs, 0)
         return torch.transpose(outputs, 0, 1)
