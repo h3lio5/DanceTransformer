@@ -90,12 +90,12 @@ class Seq2SeqModel(nn.Module):
     def forward(self, encoder_inputs, decoder_inputs):
         """
         Args:
-            input_sequences: batch of dance pose sequences , shape=(batch_size,seq_length-1,num_joints*3)
-
+            encoder_inputs: batch of dance pose sequences , shape=(batch_size,source_seq_length,num_joints*3)
+            decoder_inputs: batch of dance pose sequences , shape=(batch_size,target_seq_length-1,num_joints*3)
         """
         # First calculate the encoder hidden state
         all_hidden_states, (encoder_hidden_state, encoder_cell_state) = self.encoder(
-            input_sequences)
+            encoder_inputs)
 
         outputs = []
         for i, inp in enumerate(input_sequences):
