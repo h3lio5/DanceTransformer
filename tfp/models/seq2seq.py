@@ -35,12 +35,11 @@ class Seq2SeqModel(nn.Module):
                  learning_rate,
                  learning_rate_decay_factor,
                  loss_to_use,
-                 number_of_actions,
                  num_joints=21,
                  one_hot=False,
                  residual_velocities=False,
                  dropout=0.0,
-                 teacher_ratio=0.3,
+                 teacher_ratio=0.0,
                  dtype=torch.float32):
         """Create the model.
         Args:
@@ -49,29 +48,14 @@ class Seq2SeqModel(nn.Module):
           target_seq_len: lenght of the target sequence.
           rnn_size: number of units in the rnn.
           num_layers: number of rnns to stack.
-          max_gradient_norm: gradients will be clipped to maximally this norm.
-          batch_size: the size of the batches used during training;
-            the model construction is independent of batch_size, so it can be
-            changed after initialization if this is convenient, e.g., for decoding.
-          learning_rate: learning rate to start with.
-          learning_rate_decay_factor: decay learning rate by this much when needed.
-          loss_to_use: [supervised, sampling_based]. Whether to use ground truth in
-            each timestep to compute the loss after decoding, or to feed back the
-            prediction from the previous time-step with probability teacher_ratio.
-          number_of_actions: number of classes we have.
+          max_gradient_norm: gradients will be clipped to maximally this norm
           one_hot: whether to use one_hot encoding during train/test (sup models).
           residual_velocities: whether to use a residual connection that models velocities.
           dtype: the data type to use to store internal variables.
         """
         super(Seq2SeqModel, self).__init__()
 
-        self.HUMAN_SIZE = num_joints*3
-        self.input_size = self.HUMAN_SIZE + \
-            number_of_actions if one_hot else self.HUMAN_SIZE
-
-        print("One hot is ", one_hot)
-        print("Input size is %d" % self.input_size)
-
+        self.input_size = num_joints*3
         # Summary writers for train and test runs
 
         self.source_seq_len = source_seq_len
@@ -98,8 +82,9 @@ class Seq2SeqModel(nn.Module):
             encoder_inputs)
 
         outputs = []
-        for i, inp in enumerate(decoder_inputs):
-
+        for inp in decoder_inputs:
+            if random.random() < self.teacher_forcing:
+                inp = prev_output
             next_state = self.decoder(inp, encoder_hidden_state)
             if self.residual_velocities:
                 output = inp + self.fc1(self.dropout(next_state))
@@ -108,7 +93,8 @@ class Seq2SeqModel(nn.Module):
             # Store the output for Teacher Forcing: use the prediction as
             # the next input instead of feeding the ground truth
             prev_output = output
-            outputs.append(output.view([1, batchsize, self.input_size]))
+            outputs.append(output.view(
+                [1, decoder_inputs.size(0), self.input_size]))
 
         outputs = torch.cat(outputs, 0)
         return torch.transpose(outputs, 0, 1)
