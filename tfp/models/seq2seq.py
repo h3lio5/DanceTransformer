@@ -1,24 +1,7 @@
 """Sequence-to-sequence model for human motion prediction."""
-
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
-
-# from tensorflow.python.ops import array_ops
-# from tensorflow.python.ops import variable_scope as vs
-
 import random
-
-import numpy as np
-import os
-from six.moves import xrange  # pylint: disable=redefined-builtin
 import torch
 from torch import nn
-import torch.nn.functional as F
-# import rnn_cell_extensions # my extensions of the tf repos
-import data_utils
-
-use_cuda = True
 
 
 class Seq2SeqModel(nn.Module):
@@ -26,8 +9,8 @@ class Seq2SeqModel(nn.Module):
 
     def __init__(self,
                  architecture,
-                 rnn_size,  # hidden recurrent layer size
-                 num_layers,
+                 rnn_size,
+                 num_layers=1,
                  num_joints=21,
                  residual_velocities=False,
                  dropout=0.0,
@@ -48,7 +31,7 @@ class Seq2SeqModel(nn.Module):
         self.residual_velocities = residual_velocities
         # === Create the RNN that will keep the state ===
         self.encoder = torch.nn.GRU(
-            self.input_size, self.rnn_size, batch_first=True)
+            self.input_size, self.rnn_size, batch_first=True, num_layers=num_layers)
         self.decoder = torch.nn.GRUCell(
             self.rnn_size, self.rnn_size)
 
