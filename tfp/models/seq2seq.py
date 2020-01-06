@@ -87,7 +87,7 @@ class Seq2SeqModel(nn.Module):
 
         self.fc1 = nn.Linear(self.rnn_size, self.input_size)
 
-    def forward(self, input_sequences):
+    def forward(self, encoder_inputs, decoder_inputs):
         """
         Args:
             input_sequences: batch of dance pose sequences , shape=(batch_size,seq_length-1,num_joints*3)
@@ -98,12 +98,13 @@ class Seq2SeqModel(nn.Module):
             input_sequences)
 
         outputs = []
-        for i, inp in enumerate(encoder_inputs):
+        for i, inp in enumerate(input_sequences):
 
             next_state = self.decoder(inp, encoder_hidden_state)
             if self.residual_velocities:
                 output = inp + self.fc1(self.dropout(next_state))
-
+            else:
+                output = self.fc1(self.dropout(next_state))
             outputs.append(output.view([1, batchsize, self.input_size]))
 
 #    return outputs, state
