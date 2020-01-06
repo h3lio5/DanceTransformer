@@ -98,7 +98,7 @@ class Seq2SeqModel(nn.Module):
             encoder_inputs)
 
         outputs = []
-        for i, inp in enumerate(input_sequences):
+        for i, inp in enumerate(decoder_inputs):
 
             next_state = self.decoder(inp, encoder_hidden_state)
             if self.residual_velocities:
