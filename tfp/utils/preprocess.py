@@ -3,6 +3,7 @@ import numpy as np
 import os
 import json
 import tfp.config.config as config
+import argparse
 
 
 def smoothen(joints, window=11, order=3, axis=0):
@@ -157,11 +158,11 @@ class GetData:
 
     def getdata(self):
 
-        sav_dat_fol = os.path.join(os.getcwd(), self.category)
+        save_data_folder = os.path.join(os.getcwd(), 'data', self.category)
         transform = Transformation(self.num_joints)
         print("data transformation started.......")
-        if not os.path.exists(sav_dat_fol):
-            os.mkdir(sav_dat_fol)
+        if not os.path.exists(save_data_folder):
+            os.mkdir(save_data_folder)
 
         with open(self.label_file) as jsonfile:
             data_files = json.load(jsonfile)[self.category]
@@ -180,3 +181,35 @@ class GetData:
                 np.save(os.path.join(sav_dat_fol, file_+".npy"), _data)
         print("data transformation ended....")
         return None
+
+
+def _prepareData(args):
+    r"""
+        Prepare Data for given catergory
+        if --first_time = TRUE then create category folder at root of repo,
+        copy transformed file in that folder
+    """
+    getdata = GetData(config.DATA_LOC, args.category)
+    getdata.getdata()
+
+
+if __name__ == "__main__":
+
+    parser = argparse.ArgumentParser(description="Training Information")
+    parser.add_argument("--category",
+                        help="The catergory of data for which you have to train")
+    parser.add_argument("--seq_len",
+                        help="Sequence length for which you have to train")
+    parser.add_argument("--overlap",
+                        help="overlap for sequence length for which you have to train")
+
+    getdata = GetData(config.DATA_LOC, args.category)
+    getdata.getdata()
+
+    # Spliting into train and testdata
+    # transformed data location
+    data_loc = os.path.join(os.getcwd(), args.category)
+    split = Split(location=data_loc, sequence_length=int(
+        args.seq_len), overlap=int(args.overlap))
+    train_data = split.split_test()
+    print(train_data.shape)
