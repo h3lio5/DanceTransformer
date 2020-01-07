@@ -46,19 +46,20 @@ class Seq2SeqModel(nn.Module):
             outputs: batch of predicted dance pose sequences, shape=(batch_size,target_seq_length-1,num_joints*3)
         """
         # First calculate the encoder hidden state
-        all_hidden_states, (encoder_hidden_state, encoder_cell_state) = self.encoder(
+        all_hidden_states, encoder_hidden_state = self.encoder(
             encoder_inputs)
 
         outputs = []
+        next_state = encoder_hidden_state
         # Iterate over decoder inputs
         for inp in decoder_inputs:
             # Perform teacher forcing
             if random.random() < self.teacher_forcing:
                 inp = prev_output
-            next_state = self.decoder(inp, encoder_hidden_state)
+            next_state = self.decoder(inp, next_state)
             # Apply residual network to help in smooth transition between subsequent poses
             if self.residual_velocities:
-                output = inp + self.fc1(self.dropout(next_state))
+                output = inp + self.projector(self.dropout(next_state))
             else:
                 output = self.projector(self.dropout(next_state))
             # Store the output for Teacher Forcing: use the prediction as
