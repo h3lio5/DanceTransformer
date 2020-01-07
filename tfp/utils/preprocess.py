@@ -52,7 +52,6 @@ class Transformation:
         Params:
         joints_xyz: joint locations in different frames in Cartesian coordinates
         shape : [number_frames,number_joints,3]
-
         Returns:
         rel_joints_xyz: location of every joint relative to their respective parents
         shape : [number_frames,number_joints,3]
@@ -67,7 +66,6 @@ class Transformation:
         Params:
         rel_joints_xyz: location of every joint relative to their respective parents
         shape : [number_frames,number_joints,3]
-
         Returns:
         abs_joints_xyz: location of every joint relative to their respective parents
         shape : [number_frames,number_joints,3]
@@ -121,7 +119,6 @@ class Transformation:
         Params:
         joints : the absolute joint coordinates of every frame before normalization
         shape : [number_frames,number_joints,3]
-
         Returns:
         cart_abs_joints : the absolute joint coordinates of every frame after normalization
         """
@@ -173,10 +170,9 @@ class GetData:
 
                 _onlyjoint_data = []
                 for frame in data:
-                    _onlyjoint_data.append(
-                        frame[np.asarray(config.JOINT_INDEX[self.num_joints])])
-                _data = transform.transform(np.asarray(_onlyjoint_data))
-                # _data = _onlyjoint_data
+                	_onlyjoint_data.append(frame[np.asarray(config.JOINT_INDEX[self.num_joints])])
+                #_data = transform.transform(np.asarray(_onlyjoint_data))
+                _data = _onlyjoint_data
 
                 np.save(os.path.join(sav_dat_fol, file_+".npy"), _data)
         print("data transformation ended....")
