@@ -8,7 +8,7 @@ from tfp.config.config import SPLIT_JSON_LOC
 
 class PoseDataset(data.Dataset):
     """
-    Dataset for seq2eq model
+    Dataset for seq2seq model
     """
 
     def __init__(self, args):
