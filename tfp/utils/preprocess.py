@@ -53,6 +53,7 @@ class Transformation:
         joints_xyz: joint locations in different frames in Cartesian coordinates
         shape : [number_frames,number_joints,3]
 
+
         Returns:
         rel_joints_xyz: location of every joint relative to their respective parents
         shape : [number_frames,number_joints,3]
