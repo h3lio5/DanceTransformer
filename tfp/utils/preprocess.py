@@ -52,6 +52,8 @@ class Transformation:
         Params:
         joints_xyz: joint locations in different frames in Cartesian coordinates
         shape : [number_frames,number_joints,3]
+
+
         Returns:
         rel_joints_xyz: location of every joint relative to their respective parents
         shape : [number_frames,number_joints,3]
@@ -66,6 +68,7 @@ class Transformation:
         Params:
         rel_joints_xyz: location of every joint relative to their respective parents
         shape : [number_frames,number_joints,3]
+
         Returns:
         abs_joints_xyz: location of every joint relative to their respective parents
         shape : [number_frames,number_joints,3]
@@ -119,6 +122,7 @@ class Transformation:
         Params:
         joints : the absolute joint coordinates of every frame before normalization
         shape : [number_frames,number_joints,3]
+
         Returns:
         cart_abs_joints : the absolute joint coordinates of every frame after normalization
         """
