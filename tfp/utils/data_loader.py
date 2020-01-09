@@ -23,9 +23,7 @@ class PoseDataset(data.Dataset):
         self.checkcomb = self.check_comb()
         self.sequence_length = args.seq_len
         self.source_length = args.source_length
-        self.target_length = args.target_length
-        assert self.source_length + \
-            self.target_length != self.sequence_length, "Source length and target length don't sum upto sequence length"
+        self.target_length = self.sequence_length - self.source_length
 
     def ___len__(self):
         """
