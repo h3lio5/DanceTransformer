@@ -20,7 +20,6 @@ class PoseDataset(data.Dataset):
         self.data = self._get_data(
             args.location, args.seq_len, args.overlap, args.split_size, args.split, args.num_joints)
         # function
-        self.checkcomb = self.check_comb()
         self.sequence_length = args.seq_len
         self.source_length = args.source_length
         self.target_length = self.sequence_length - self.source_length
