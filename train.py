@@ -2,80 +2,53 @@ import os
 import argparse
 import tfp.config.config as config
 import torch
-from tfp.utils.transform_data import GetData
-from tfp.utils.splitting import Split
+from torch.utils.data import DataLoader
+from tfp.utils.data_loader import PoseDataset
 from tfp.models.seq2seq import Seq2SeqModel
-
-
-def str_to_bool(value):
-    if isinstance(value, bool):
-        return value
-    if value.lower() in {'false', 'f', '0', 'no', 'n'}:
-        return False
-    elif value.lower() in {'true', 't', '1', 'yes', 'y'}:
-        return True
-    raise ValueError(f'{value} is not a valid boolean value')
+from tqdm import tqdm, trange
 
 
 parser = argparse.ArgumentParser(description="Training Information")
-parser.add_argument("-category",
-                    help="The catergory of data for which you have to train")
-parser.add_argument("-seq_len",
-                    help="Sequence length for which you have to train")
-parser.add_argument("-overlap",
-                    help="overlap for sequence length for which you have to train")
-parser.add_argument("--first_time",
-                    action='store_true',
-                    default=False,
-                    help="transformed data available or not")
+# parser.add_argument("--category",
+#                     help="The catergory of data for which you have to train")
+parser.add_argument("--seq_len",
+                    help="Sequence length for which you have to train", default=100, type=int)
+parser.add_argument("--overlap",
+                    help="overlap for sequence length for which you have to train", default=0, type=int)
+parser.add_argument(
+    "--location", help="location of data set", default="data/salsa")
+parser.add_argument("--split_size", help="Test/Train ratio",
+                    default=20, type=int)
+parser.add_argument(
+    "--overlap", help="overlap between subsequent pose sequences", default=0, type=int)
+parser.add_argument("--num_joints", help="number of joints",
+                    default=21, type=int)
+parser.add_argument("--source_length", help="lengt", default=60, type=int)
+
 
 args = parser.parse_args()
-def _prepareData(args):
-    r"""
-        Prepare Data for given catergory
-        if --first_time = TRUE then create category folder at root of repo,
-        copy transformed file in that folder
-    """
-    getdata = GetData(config.DATA_LOC,args.category)
-    getdata.getdata()
-
-
 
 
 if __name__ == "__main__":
-    
-    print(os.getcwd())
-    if bool(args.first_time):
-        _prepareData(args)
-        print('Preparing data')
 
-    ## Spliting into train and testdata
-    data_loc = os.path.join(os.getcwd(),args.category) #transformed data location
-    split = Split(location=data_loc, sequence_length = int(args.seq_len), overlap = int(args.overlap))
-    train_data = torch.Tensor(split.split_train()).cuda()
-
-    train_data = train_data.reshape(-1, 100, 63)
-    batch_size = 8
-    n_batches = train_data.shape[0]//batch_size
-    batches = train_data[:n_batches*batch_size, :, :].reshape(n_batches, batch_size, 100, 63)
-
-    model = Seq2SeqModel(None, 128, num_layers=3, num_joints=21, residual_velocities=True, dropout=0.3, teacher_ratio=0.3)
-    model=model.cuda()
+    # Spliting into train and testdata
+    # transformed data location
+    posedataset = PoseDataset(args)
+    train_loader = DataLoader(posedataset, batch_size=16, num_workers=4)
+    model = Seq2SeqModel(None, 128, num_layers=3, num_joints=21,
+                         residual_velocities=True, dropout=0.3, teacher_ratio=0.3)
+    model = model.cuda()
 
     EPOCHS = 100
+    save_freq = 10
     opt = torch.optim.SGD(model.parameters(), lr=1e-3)
     MSE = torch.nn.MSELoss()
     avg_losses = []
-    for _ in range(EPOCHS):
+    for epoch in trange(EPOCHS):
         losses = []
-        for mini_batch in batches:
+        for encoder_inputs, decoder_inputs, target in tqdm(train_loader):
             opt.zero_grad()
-
-            encoder_inputs = mini_batch[:, :60, :]
-            decoder_inputs = mini_batch[:, 60:-1, :]
-            target = mini_batch[:, 61:, :]
-    
-            output = model.forward(encoder_inputs, decoder_inputs)
+            output = model(encoder_inputs.cuda(), decoder_inputs.cuda())
             loss = MSE(output, target)
             loss.backward()
             opt.step()
@@ -84,4 +57,7 @@ if __name__ == "__main__":
         avg_loss = sum(losses)/len(losses)
         avg_losses.append(avg_loss)
         print(f'Epoch: {_} Completed\nLoss: {avg_loss}\n')
-        torch.save(model.state_dict(), 'saved_models/state_dict.pt')
+        if epoch + 1 % save_freq == 0:
+            print("Saving model ")
+            torch.save(model.state_dict(),
+                       f'saved_models/state_dict_{epoch}.pt')
