@@ -25,7 +25,7 @@ parser.add_argument("--num_joints", help="number of joints",
                     default=21, type=int)
 parser.add_argument("--source_length", help="lengt", default=60, type=int)
 parser.add_argument("--split",)
-parser.add_argument("--transform", default=True, type=str,
+parser.add_argument("--normalize", default=True, type=str,
                     help="Normalize bone lengths or not?")
 
 args = parser.parse_args()
