@@ -33,9 +33,9 @@ class PoseDataset(data.Dataset):
     def __getitem__(self, idx):
         """
         Returns:
-            encoder_input: dance pose sequence input for encoder
-            decoder_input: dance pose sequence input for decoder
-            decoder_output: dance pose sequence used as target 
+            encoder_input: dance pose sequence input for the encoder
+            decoder_input: dance pose sequence input for the decoder
+            decoder_output: dance pose sequence used as the target 
         """
         frame_seq = self.data[idx]
         if self.normalize:
