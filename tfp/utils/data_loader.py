@@ -4,6 +4,7 @@ import json
 import numpy as np
 import math
 from tfp.config.config import SPLIT_JSON_LOC
+from tfp.utils.preprocess import Transformation
 
 
 class PoseDataset(data.Dataset):
@@ -20,9 +21,12 @@ class PoseDataset(data.Dataset):
         self.data = self._get_data(
             args.location, args.seq_len, args.overlap, args.split_size, args.split, args.num_joints)
         # function
+        self.normalize = args.normalize
+        self.numjoints = args.num_joints
         self.sequence_length = args.seq_len
         self.source_length = args.source_length
         self.target_length = self.sequence_length - self.source_length
+        self.transformer = Transformation(args.number_joints)
 
     def ___len__(self):
         """
@@ -38,6 +42,9 @@ class PoseDataset(data.Dataset):
             decoder_output: dance pose sequence used as target 
         """
         frame_seq = self.data[idx]
+        if self.normalize:
+            frame_seq = self.transformer.transform(
+                frame_seq.view(-1, self.numjoints, 3))
         encoder_input = frame_seq[:self.source_length, :]
         decoder_input = frame_seq[self.source_length:
                                   self.source_length+self.target_length-1, :]
