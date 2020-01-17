@@ -21,7 +21,6 @@ parser.add_argument("--split_ratio", help="Test/Train ratio",
                     default=0.2, type=int)
 parser.add_argument("--num_joints", help="number of joints",
                     default=21, type=int)
-<<<<<<< HEAD
 parser.add_argument("--source_length", help="source sequence length", default=60, type=int)
 parser.add_argument("--normalize", default=True, type=str,
                     help="Normalize bone lengths or not?")
